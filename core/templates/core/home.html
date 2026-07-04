@@ -1,0 +1,105 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | New session{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+    <div>
+        <p class="eyebrow">Teach-to-learn study companion</p>
+        <h1 class="page-title">Teach Peckish until the idea pecks.</h1>
+        <p class="lead mt-4 max-w-2xl">
+            Pick a topic or bring notes. Peckish adapts revision around {{ sen_plan.label }} support, listens like a curious peer, and saves misunderstandings as gentle fossil cards.
+        </p>
+
+        <section class="adaptive-panel mt-8">
+            <p class="eyebrow">Your SEN-aware method</p>
+            <h2 class="section-title">{{ sen_plan.method }}</h2>
+            <p class="mt-2 text-[color:var(--muted)]">{{ sen_plan.summary }}</p>
+            <ul class="focus-list mt-4">
+                {% for item in sen_plan.session_focus %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+            <a class="mini-link mt-5" href="{% url 'core:profile_setup' %}">Change profile</a>
+        </section>
+
+        <form class="panel mt-8 space-y-6" method="post" enctype="multipart/form-data" data-source-form>
+            {% csrf_token %}
+            <fieldset>
+                <legend class="field-label">Start with</legend>
+                <div class="segmented mt-2" role="radiogroup" aria-label="Study source">
+                    <label>
+                        <input type="radio" name="source_type" value="generated" checked>
+                        <span>Topic</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="source_type" value="upload">
+                        <span>Notes</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div>
+                <label class="field-label" for="topic_title">Topic title</label>
+                <input class="text-input mt-2" id="topic_title" name="topic_title" type="text" placeholder="Photosynthesis, fractions, supply and demand">
+            </div>
+
+            <div data-source-panel="generated">
+                <p class="helper-text">Peckish is powered by Gemini AI, which can draft concept notes designed by your prompt.</p>
+            </div>
+
+            <div class="space-y-4 hidden" data-source-panel="upload">
+                <div>
+                    <label class="field-label" for="raw_notes">Paste notes</label>
+                    <textarea class="text-area mt-2" id="raw_notes" name="raw_notes" rows="8" placeholder="Paste class notes, revision notes, or extracted PDF text here."></textarea>
+                </div>
+                <div>
+                    <label class="field-label" for="notes_file">Or upload a PDF/text file</label>
+                    <input class="file-input mt-2" id="notes_file" name="notes_file" type="file" accept=".pdf,.txt,.md,text/plain,application/pdf">
+                </div>
+            </div>
+
+            <button class="primary-button w-full sm:w-auto" type="submit">Create study session</button>
+        </form>
+    </div>
+
+    <aside class="side-stage" aria-label="Peckish and review queue">
+        {% include "core/partials/peckish.html" with mood="happy" %}
+        <div class="peckish-bubble">
+            <p class="font-semibold">I learn best when you teach me back.</p>
+            <p class="mt-2 text-sm text-[color:var(--muted)]">No grades. Just curiosity, follow-up questions, and tiny fossils for ideas worth revisiting.</p>
+        </div>
+
+        {% if unresolved_fossils %}
+            <section class="mt-8">
+                <h2 class="section-title">Molting review</h2>
+                <div class="mt-3 grid gap-3">
+                    {% for fossil in unresolved_fossils %}
+                        <article class="fossil-mini">
+                            <p class="text-sm font-bold">{{ fossil.fossil_name }}</p>
+                            <p class="mt-1 text-sm text-[color:var(--muted)]">{{ fossil.concept.title }}</p>
+                            <a class="mini-link mt-3" href="{% url 'core:reteach' fossil.id %}">Pick up</a>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if recent_sessions %}
+            <section class="mt-8">
+                <h2 class="section-title">Continue studying</h2>
+                <div class="mt-3 grid gap-3">
+                    {% for old_session in recent_sessions %}
+                        <article class="fossil-mini">
+                            <p class="text-sm font-bold">{{ old_session.topic_title }}</p>
+                            <p class="mt-1 text-sm text-[color:var(--muted)]">
+                                Level {{ old_session.pet_level }} | {{ old_session.pet_xp }} XP
+                            </p>
+                            <a class="mini-link mt-3" href="{% url 'core:read' old_session.id %}">Continue</a>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    </aside>
+</section>
+{% endblock %}

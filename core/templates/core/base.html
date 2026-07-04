@@ -1,0 +1,85 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Peckish{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<body class="min-h-screen text-[color:var(--ink)]" data-transcribe-url="{% url 'core:transcribe_audio' %}">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+            <a href="{% url 'core:home' %}" class="brand-mark" aria-label="Peckish home">
+                <span class="brand-icon" aria-hidden="true"></span>
+                <span>Peckish</span>
+            </a>
+            {% if player_progress %}
+                <div class="top-level" aria-label="Learner level">
+                    <span class="level-flame" aria-hidden="true"></span>
+                    <div class="level-copy">
+                        <div class="level-row">
+                            <strong>Level {{ player_progress.level }}</strong>
+                            <span>{{ player_progress.total_xp }} XP</span>
+                        </div>
+                        <div class="level-track" aria-hidden="true">
+                            <span style="width: {{ player_progress.percent }}%"></span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="flex items-center gap-2">
+                <button class="icon-button" type="button" id="readingToggle" aria-pressed="false" title="Reading mode">
+                    <span aria-hidden="true">Aa</span>
+                    <span class="sr-only">Toggle reading mode</span>
+                </button>
+                {% if request.user.is_authenticated %}
+                    <a class="quiet-link" href="{% url 'core:home' %}">New session</a>
+                    <div class="account-menu">
+                        <button class="account-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                            Hello {{ request.user.first_name|default:request.user.username }}
+                        </button>
+                        <div class="account-dropdown" role="menu">
+                            <a href="{% url 'core:profile' %}" role="menuitem">User profile</a>
+                            <form method="post" action="{% url 'core:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" role="menuitem">Log out</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <a class="quiet-link" href="{% url 'core:login' %}">Log in</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    {% if level_up_payload %}
+        <section class="level-toast" data-level-toast role="status" aria-live="polite">
+            <span class="level-toast-flame" aria-hidden="true"></span>
+            <div>
+                <p class="eyebrow">Level up</p>
+                <h2>Level {{ level_up_payload.level }}</h2>
+                <p>{{ level_up_payload.total_xp }} total XP</p>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if messages %}
+        <section class="mx-auto mt-4 max-w-4xl px-4 sm:px-6 lg:px-8" aria-label="Messages">
+            {% for message in messages %}
+                <div class="message message-{{ message.tags }}" role="status">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <main id="main" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'core/app.js' %}"></script>
+</body>
+</html>

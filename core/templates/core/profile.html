@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Profile{% endblock %}
+
+{% block content %}
+<section class="page-band">
+    <div>
+        <p class="eyebrow">User profile</p>
+        <h1 class="page-title">{{ display_name }}</h1>
+        <p class="lead mt-3">{{ request.user.email }}</p>
+    </div>
+    <a class="primary-button" href="{% url 'core:home' %}">New session</a>
+</section>
+
+<section class="adaptive-panel mt-8">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <p class="eyebrow">{{ learning_profile.get_sen_profile_display }}</p>
+            <h2 class="section-title">{{ sen_plan.method }}</h2>
+            <p class="mt-2 text-[color:var(--muted)]">{{ sen_plan.summary }}</p>
+        </div>
+        <a class="mini-link" href="{% url 'core:profile_setup' %}">Edit learning profile</a>
+    </div>
+</section>
+
+<section class="mt-8 grid gap-4 md:grid-cols-3" aria-label="Account progress">
+    <article class="stat-tile">
+        <p class="eyebrow">Study sessions</p>
+        <p class="stat-number">{{ sessions|length }}</p>
+    </article>
+    <article class="stat-tile">
+        <p class="eyebrow">Concepts complete</p>
+        <p class="stat-number">{{ completed_concepts }}</p>
+    </article>
+    <article class="stat-tile">
+        <p class="eyebrow">Open fossils</p>
+        <p class="stat-number">{{ open_fossils|length }}</p>
+    </article>
+</section>
+
+<section class="mt-10">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="eyebrow">Saved in the database</p>
+            <h2 class="page-subtitle">Your sessions</h2>
+        </div>
+    </div>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+        {% for study_session in sessions %}
+            <article class="concept-card">
+                <p class="eyebrow">{{ study_session.created_at|date:"j M Y, H:i" }}</p>
+                <h3 class="card-title mt-1">{{ study_session.topic_title }}</h3>
+                <p class="mt-3 text-[color:var(--muted)]">
+                    {{ study_session.concepts.count }} concepts | Level {{ study_session.pet_level }} | {{ study_session.pet_xp }} XP
+                </p>
+                <div class="mt-5 flex flex-wrap gap-3">
+                    <a class="secondary-button" href="{% url 'core:read' study_session.id %}">Continue</a>
+                    <a class="mini-link" href="{% url 'core:summary' study_session.id %}">Summary</a>
+                </div>
+            </article>
+        {% empty %}
+            <article class="panel">
+                <h3 class="section-title">No sessions yet</h3>
+                <p class="mt-2 text-[color:var(--muted)]">Create a study session and it will appear here.</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% if open_fossils %}
+    <section class="mt-10">
+        <p class="eyebrow">Molting review</p>
+        <h2 class="page-subtitle">Open fossil cards</h2>
+        <div class="fossil-shelf mt-5">
+            {% for fossil in open_fossils %}
+                <article class="fossil-card">
+                    <p class="fossil-label">{{ fossil.concept.session.topic_title }}</p>
+                    <h3>{{ fossil.fossil_name }}</h3>
+                    <p class="fossil-flavor mt-4">{{ fossil.flavor_text }}</p>
+                    <a class="mini-link mt-4" href="{% url 'core:reteach' fossil.id %}">Pick up</a>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

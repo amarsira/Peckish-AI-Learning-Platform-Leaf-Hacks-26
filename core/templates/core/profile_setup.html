@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Learning profile{% endblock %}
+
+{% block content %}
+<section class="page-band">
+    <div>
+        <p class="eyebrow">Build for every mind</p>
+        <h1 class="page-title">Choose your learning profile.</h1>
+        <p class="lead mt-3 max-w-3xl">
+            Pick the SEN profile that fits you most strongly right now. Peckish will automatically adapt revision resources and teaching sessions around it.
+        </p>
+    </div>
+</section>
+
+<form class="mt-8" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend class="sr-only">Choose the SEN profile that fits you best</legend>
+        <div class="sen-grid">
+            {% for option in sen_options %}
+                <label class="sen-option">
+                    <input type="radio" name="sen_profile" value="{{ option.value }}" {% if profile.sen_profile == option.value %}checked{% endif %}>
+                    <span class="sen-card">
+                        <span class="eyebrow">{{ option.label }}</span>
+                        <strong>{{ option.plan.method }}</strong>
+                        <span>{{ option.plan.summary }}</span>
+                    </span>
+                </label>
+            {% endfor %}
+        </div>
+    </fieldset>
+    <div class="mt-8 flex flex-wrap gap-3">
+        <button class="primary-button" type="submit">Save learning profile</button>
+        {% if profile.setup_complete %}
+            <a class="secondary-button" href="{% url 'core:profile' %}">Back to profile</a>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Teach {{ concept.title }}{% endblock %}
+
+{% block content %}
+<section class="teach-layout">
+    <div class="teach-main">
+        <a class="back-link" href="{% url 'core:read' session.id %}">Back to notes</a>
+        <p class="eyebrow mt-4">Teach from memory</p>
+        <h1 class="page-title">{{ concept.title }}</h1>
+
+        <div class="progress-shell mt-6">
+            <div class="flex items-center justify-between gap-4">
+                <p class="font-semibold">Peckish fullness</p>
+                <p class="text-sm text-[color:var(--muted)]">{{ progress.completed }} of {{ progress.total }} concepts</p>
+            </div>
+            <div class="progress-track mt-3" aria-hidden="true">
+                <span style="width: {{ progress.percent }}%"></span>
+            </div>
+        </div>
+
+        {% if latest_turn %}
+            <section class="reaction-card reaction-{{ latest_turn.reaction_type|lower }} mt-6" aria-live="polite">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                    {% include "core/partials/peckish.html" with mood=latest_turn.reaction_type|lower %}
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="eyebrow">{{ latest_turn.get_reaction_type_display }} | Depth {{ latest_turn.depth_score }}%</p>
+                            {% if latest_turn.xp_awarded %}
+                                <span class="xp-chip">+{{ latest_turn.xp_awarded }} XP</span>
+                            {% endif %}
+                        </div>
+                        <p class="mt-2 text-lg font-semibold" data-peckish-speech>{{ latest_turn.peckish_response }}</p>
+                        <button class="mini-link mt-4" type="button" data-speak-button>Hear Peckish</button>
+                    </div>
+                </div>
+                <div class="feedback-grid mt-5">
+                    {% if latest_turn.feedback_summary %}
+                        <article>
+                            <p class="feedback-label">What landed</p>
+                            <p>{{ latest_turn.feedback_summary }}</p>
+                        </article>
+                    {% endif %}
+                    {% if latest_turn.subtle_hint %}
+                        <article>
+                            <p class="feedback-label">Tiny hint</p>
+                            <p>{{ latest_turn.subtle_hint }}</p>
+                        </article>
+                    {% endif %}
+                    {% if latest_turn.follow_up_question and not concept_complete %}
+                        <article>
+                            <p class="feedback-label">Next question</p>
+                            <p>{{ latest_turn.follow_up_question }}</p>
+                        </article>
+                    {% endif %}
+                    {% if latest_turn.missing_points %}
+                        <article>
+                            <p class="feedback-label">Still fuzzy</p>
+                            <ul class="feedback-list">
+                                {% for point in latest_turn.missing_points %}
+                                    <li>{{ point }}</li>
+                                {% endfor %}
+                            </ul>
+                        </article>
+                    {% endif %}
+                </div>
+            </section>
+        {% else %}
+            <section class="reaction-card mt-6">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                    {% include "core/partials/peckish.html" with mood="curious" %}
+                    <div>
+                        <p class="eyebrow">Peckish is listening</p>
+                        <p class="mt-2 text-lg font-semibold">Teach me this concept in your own words. I will ask if I need one more layer.</p>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        {% if concept_complete %}
+            <section class="panel mt-6">
+                <h2 class="section-title">Concept wrapped</h2>
+                {% if review_fossil %}
+                    <p class="mt-2 text-[color:var(--muted)]">Peckish saved this as a fossil card so you can pick it up later with the same notes and previous attempts.</p>
+                {% else %}
+                    <p class="mt-2 text-[color:var(--muted)]">Peckish has enough to carry this idea forward.</p>
+                {% endif %}
+                <div class="mt-5 flex flex-wrap gap-3">
+                    {% if next_concept %}
+                        <a class="primary-button" href="{% url 'core:teach' session.id next_concept.id %}">Next concept</a>
+                    {% else %}
+                        <a class="primary-button" href="{% url 'core:summary' session.id %}">See session summary</a>
+                    {% endif %}
+                    {% if review_fossil %}
+                        <a class="secondary-button" href="{% url 'core:reteach' review_fossil.id %}">Open fossil</a>
+                    {% endif %}
+                    <a class="secondary-button" href="{% url 'core:read' session.id %}">Review notes</a>
+                </div>
+            </section>
+        {% else %}
+            <form class="panel mt-6 space-y-4" method="post">
+                {% csrf_token %}
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <label class="field-label" for="student_text">Your explanation</label>
+                    <button class="mic-button" type="button" data-speech-button data-speech-target="student_text">
+                        <span class="mic-dot" aria-hidden="true"></span>
+                        Speak
+                    </button>
+                </div>
+                <p class="voice-status" data-voice-status aria-live="polite"></p>
+                <textarea class="text-area" id="student_text" name="student_text" rows="8" data-speech-input placeholder="Explain the concept as if Peckish has never heard it before. Typed answers work just as well as voice."></textarea>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="helper-text">Turn {{ turns_count|add:1 }} of {{ max_followups }} before Peckish moves on.</p>
+                    <button class="primary-button" type="submit">Teach Peckish</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

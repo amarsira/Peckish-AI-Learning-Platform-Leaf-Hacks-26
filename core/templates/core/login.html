@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Log in{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+    <div>
+        <p class="eyebrow">Account required</p>
+        <h1 class="page-title">Bring Peckish with you.</h1>
+        <p class="lead mt-4 max-w-2xl">
+            Sign in with Google so your study sessions, fossil cards, and progress follow you across devices.
+        </p>
+
+        <div class="panel mt-8 space-y-5">
+            {% if google_configured %}
+                <a class="google-button" href="{% url 'core:google_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">
+                    <span class="google-mark" aria-hidden="true">G</span>
+                    Continue with Google
+                </a>
+                <p class="helper-text">Peckish only uses your Google account to identify your study progress.</p>
+            {% else %}
+                <h2 class="section-title">Google login needs setup</h2>
+                <p class="helper-text">
+                    Add Google OAuth credentials to your `.env` file, then restart Django.
+                </p>
+                <code class="env-block">GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI={{ google_redirect_uri }}</code>
+            {% endif %}
+        </div>
+    </div>
+
+    <aside class="side-stage">
+        {% include "core/partials/peckish.html" with mood="happy" %}
+        <div class="peckish-bubble">
+            <p class="font-semibold">I remember what we practiced.</p>
+            <p class="mt-2 text-sm text-[color:var(--muted)]">
+                Your sessions are stored in the database under your account, so a different laptop can pick up the same fossil shelf.
+            </p>
+        </div>
+    </aside>
+</section>
+{% endblock %}

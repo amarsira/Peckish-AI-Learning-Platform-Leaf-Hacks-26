@@ -1,0 +1,103 @@
+{% extends "core/base.html" %}
+{% load note_filters %}
+{% block title %}Peckish | {{ resource_label }}{% endblock %}
+
+{% block content %}
+<section class="page-band">
+    <div>
+        <p class="eyebrow">{{ sen_plan.label }} | {{ sen_plan.method }}</p>
+        <h1 class="page-title">{{ resource_label }}</h1>
+        <p class="lead mt-3 max-w-3xl">
+            {{ content.intro|default:sen_plan.summary }}
+        </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+        <a class="secondary-button" href="{% url 'core:read' session.id %}">Back to notes</a>
+        <a class="mini-link" href="{% url 'core:revision_resource' session.id resource.resource_type %}?refresh=1">Regenerate</a>
+    </div>
+</section>
+
+{% if resource.resource_type == "flashcards" %}
+    <section class="mt-8 grid gap-4 md:grid-cols-2" aria-label="Generated flashcards">
+        {% for card in content.cards %}
+            <article class="flashcard" data-flashcard tabindex="0" role="button" aria-pressed="false">
+                <div class="flashcard-inner">
+                    <div class="flashcard-face flashcard-front">
+                        <p class="eyebrow">Front</p>
+                        <h2>{{ card.front }}</h2>
+                        <span class="flip-cue">Click to flip</span>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <p class="eyebrow">Back</p>
+                        <p>{{ card.back }}</p>
+                        <p class="mt-4 text-sm font-bold text-[color:var(--teal)]">{{ card.cue }}</p>
+                        <span class="flip-cue">Click to flip back</span>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <p>No cards were generated yet.</p>
+        {% endfor %}
+    </section>
+{% elif resource.resource_type == "mindmap" %}
+    <section class="mindmap-stage mt-8" aria-label="Generated mind map">
+        <div class="mindmap-canvas mindmap-count-{{ content.nodes|length }}" data-mindmap-canvas>
+            <svg class="mindmap-connectors" data-mindmap-connectors aria-hidden="true"></svg>
+            <div class="mindmap-center" data-mindmap-center>
+                <p class="eyebrow">Central idea</p>
+                <h2>{{ content.central_idea|default:session.topic_title }}</h2>
+                {% if content.intro %}
+                    <ul class="mindmap-notes mindmap-notes-center">
+                        {% for point in content.intro|note_points:3 %}
+                            <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            {% for node in content.nodes %}
+                <article class="mindmap-node mindmap-pos-{{ forloop.counter }}" style="--node-color: {{ node.color|default:'#ff9f1c' }};" data-mindmap-node>
+                    <span class="mindmap-node-dot" aria-hidden="true"></span>
+                    <span class="mindmap-node-badge" aria-hidden="true">
+                        {{ node.icon|default:"spark"|mindmap_icon }}
+                    </span>
+                    <h3>{{ node.label }}</h3>
+                    <ul class="mindmap-notes">
+                        {% for point in node.summary|note_points:4 %}
+                            <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+            {% empty %}
+                <p>No mindmap nodes were generated yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    <section class="flowchart mt-8" aria-label="Generated flow chart">
+        {% for step in content.steps %}
+            <article class="flow-step">
+                <div class="flow-number">{{ step.icon|default:forloop.counter }}</div>
+                <div>
+                    <p class="eyebrow">Step {{ forloop.counter }}</p>
+                    <h2>{{ step.title }}</h2>
+                    <p class="mt-2 text-[color:var(--muted)]">{{ step.description }}</p>
+                    <p class="flow-check">{{ step.checkpoint }}</p>
+                </div>
+            </article>
+        {% empty %}
+            <p>No flowchart steps were generated yet.</p>
+        {% endfor %}
+    </section>
+{% endif %}
+
+{% if content.study_steps %}
+    <section class="panel mt-8">
+        <h2 class="section-title">How to use this</h2>
+        <ol class="study-steps mt-4">
+            {% for step in content.study_steps %}
+                <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
+    </section>
+{% endif %}
+{% endblock %}

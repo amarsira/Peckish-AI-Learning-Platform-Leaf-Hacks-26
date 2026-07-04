@@ -1,0 +1,118 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Molting review{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <aside class="fossil-card fossil-card-large">
+        <p class="fossil-label">Molting review</p>
+        <h1>{{ fossil.fossil_name }}</h1>
+        <dl class="mt-4 space-y-3">
+            <div>
+                <dt>What was fuzzy</dt>
+                <dd>{{ fossil.what_they_said }}</dd>
+            </div>
+            <div>
+                <dt>The clearer idea</dt>
+                <dd>{{ fossil.the_truth }}</dd>
+            </div>
+        </dl>
+        <p class="fossil-flavor mt-4">{{ fossil.flavor_text }}</p>
+        <details class="fossil-context mt-4">
+            <summary>Original notes</summary>
+            <p class="mt-3 whitespace-pre-line">{{ source_notes }}</p>
+        </details>
+    </aside>
+
+    <div>
+        <a class="back-link" href="{% url 'core:home' %}">Back home</a>
+        <section class="reaction-card mt-4" aria-live="polite">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                {% include "core/partials/peckish.html" with mood="curious" %}
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p class="eyebrow">{{ fossil.concept.title }}{% if review_turn %} | Depth {{ review_turn.depth_score }}%{% endif %}</p>
+                        {% if review_turn.xp_awarded %}
+                            <span class="xp-chip">+{{ review_turn.xp_awarded }} XP</span>
+                        {% endif %}
+                    </div>
+                    <p class="mt-2 text-lg font-semibold" data-peckish-speech>
+                        {% if result %}
+                            {{ result.peckish_response }}
+                        {% else %}
+                            {{ prompt }}
+                        {% endif %}
+                    </p>
+                    <button class="mini-link mt-4" type="button" data-speak-button>Hear Peckish</button>
+                </div>
+            </div>
+            {% if review_turn %}
+                <div class="feedback-grid mt-5">
+                    {% if review_turn.feedback_summary %}
+                        <article>
+                            <p class="feedback-label">What landed</p>
+                            <p>{{ review_turn.feedback_summary }}</p>
+                        </article>
+                    {% endif %}
+                    {% if review_turn.subtle_hint %}
+                        <article>
+                            <p class="feedback-label">Tiny hint</p>
+                            <p>{{ review_turn.subtle_hint }}</p>
+                        </article>
+                    {% endif %}
+                    {% if review_turn.follow_up_question and not success %}
+                        <article>
+                            <p class="feedback-label">Next question</p>
+                            <p>{{ review_turn.follow_up_question }}</p>
+                        </article>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        {% if attempts %}
+            <section class="panel mt-6">
+                <h2 class="section-title">Previous attempts</h2>
+                <ol class="attempt-list mt-4">
+                    {% for attempt in attempts %}
+                        <li>
+                            <div class="attempt-head">
+                                <strong>Attempt {{ attempt.turn_number }}</strong>
+                                <span>{{ attempt.reaction_type|title }} | Depth {{ attempt.depth_score }}%</span>
+                            </div>
+                            <p class="attempt-student">{{ attempt.student_text }}</p>
+                            <p class="attempt-peckish">{{ attempt.peckish_response }}</p>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+        {% endif %}
+
+        {% if success %}
+            <section class="panel mt-6">
+                <h2 class="section-title">Remembered</h2>
+                <p class="mt-2 text-[color:var(--muted)]">Peckish has tucked this fossil back onto the shelf.</p>
+                <div class="mt-5 flex flex-wrap gap-3">
+                    {% if next_fossil %}
+                        <a class="primary-button" href="{% url 'core:reteach' next_fossil.id %}">Next fossil</a>
+                    {% endif %}
+                    <a class="secondary-button" href="{% url 'core:home' %}">Done</a>
+                </div>
+            </section>
+        {% else %}
+            <form class="panel mt-6 space-y-4" method="post">
+                {% csrf_token %}
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <label class="field-label" for="student_text">Re-teach the fossil</label>
+                    <button class="mic-button" type="button" data-speech-button data-speech-target="student_text">
+                        <span class="mic-dot" aria-hidden="true"></span>
+                        Speak
+                    </button>
+                </div>
+                <p class="voice-status" data-voice-status aria-live="polite"></p>
+                <textarea class="text-area" id="student_text" name="student_text" rows="8" data-speech-input placeholder="Explain the clearer idea in your own words."></textarea>
+                <button class="primary-button" type="submit">Help Peckish remember</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

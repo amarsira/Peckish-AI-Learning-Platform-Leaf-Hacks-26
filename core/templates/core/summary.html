@@ -1,0 +1,77 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | Summary{% endblock %}
+
+{% block content %}
+<section class="page-band">
+    <div>
+        <p class="eyebrow">Session summary</p>
+        <h1 class="page-title">{{ session.topic_title }}</h1>
+        <p class="lead mt-3">Peckish reached level {{ session.pet_level }} with {{ session.pet_xp }} XP.</p>
+    </div>
+    <a class="secondary-button" href="{% url 'core:home' %}">New session</a>
+</section>
+
+<section class="mt-8 grid gap-4 md:grid-cols-3" aria-label="XP calculation">
+    <article class="stat-tile">
+        <p class="eyebrow">Average depth</p>
+        <p class="stat-number">{{ average_depth }}%</p>
+    </article>
+    <article class="stat-tile">
+        <p class="eyebrow">Concepts taught</p>
+        <p class="stat-number">{{ completed_count }}</p>
+    </article>
+    <article class="stat-tile">
+        <p class="eyebrow">First-try clicks</p>
+        <p class="stat-number">{{ first_try_satisfied }}</p>
+    </article>
+</section>
+
+<section class="panel mt-8">
+    <h2 class="section-title">XP earned live</h2>
+    <p class="mt-2 text-[color:var(--muted)]">Satisfied answers earn the biggest bursts. Partly-right answers still earn practice XP, while confused answers become feedback or fossil cards.</p>
+    <div class="progress-track mt-4" aria-hidden="true">
+        <span style="width: {{ progress.percent }}%"></span>
+    </div>
+</section>
+
+<section class="mt-10">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="eyebrow">Museum shelf</p>
+            <h2 class="page-subtitle">Fossil cards</h2>
+        </div>
+        <a class="quiet-link" href="{% url 'core:read' session.id %}">Review concepts</a>
+    </div>
+
+    <div class="fossil-shelf mt-5">
+        {% for fossil in fossils %}
+            <article class="fossil-card">
+                <p class="fossil-label">Specimen {{ forloop.counter }}</p>
+                <h3>{{ fossil.fossil_name }}</h3>
+                <dl class="mt-4 space-y-3">
+                    <div>
+                        <dt>What was fuzzy</dt>
+                        <dd>{{ fossil.what_they_said }}</dd>
+                    </div>
+                    <div>
+                        <dt>The clearer idea</dt>
+                        <dd>{{ fossil.the_truth }}</dd>
+                    </div>
+                </dl>
+                <p class="fossil-flavor mt-4">{{ fossil.flavor_text }}</p>
+                {% if not fossil.re_taught_successfully %}
+                    <a class="mini-link mt-4" href="{% url 'core:reteach' fossil.id %}">Pick up later</a>
+                {% else %}
+                    <span class="status-pill mt-4">Re-taught</span>
+                {% endif %}
+            </article>
+        {% empty %}
+            <div class="empty-shelf">
+                {% include "core/partials/peckish.html" with mood="satisfied" %}
+                <p class="font-semibold">No fossils this time.</p>
+                <p class="mt-2 text-sm text-[color:var(--muted)]">Peckish did not preserve any big misunderstandings from this session.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

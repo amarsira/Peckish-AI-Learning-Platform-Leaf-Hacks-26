@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+{% block title %}Peckish | {{ session.topic_title }}{% endblock %}
+
+{% block content %}
+<section class="page-band">
+    <div>
+        <p class="eyebrow">{{ session.get_source_type_display }}</p>
+        <h1 class="page-title">{{ session.topic_title }}</h1>
+        <p class="lead mt-3 max-w-3xl">Read the notes, then teach each concept from memory. The notes disappear during teaching so retrieval does the hard work.</p>
+    </div>
+    {% if first_concept %}
+        <a class="primary-button" href="{% url 'core:teach' session.id first_concept.id %}">Start teaching</a>
+    {% endif %}
+</section>
+
+<section class="mt-8" aria-label="Session progress">
+    <div class="progress-shell">
+        <div class="flex items-center justify-between gap-4">
+            <p class="font-semibold">Peckish fullness</p>
+            <p class="text-sm text-[color:var(--muted)]">{{ progress.completed }} of {{ progress.total }} concepts</p>
+        </div>
+        <div class="progress-track mt-3" aria-hidden="true">
+            <span style="width: {{ progress.percent }}%"></span>
+        </div>
+    </div>
+</section>
+
+<section class="adaptive-panel mt-8">
+    <div>
+        <p class="eyebrow">{{ sen_plan.label }} learning path</p>
+        <h2 class="section-title">{{ sen_plan.method }}</h2>
+        <p class="mt-2 text-[color:var(--muted)]">{{ sen_plan.summary }}</p>
+    </div>
+    <div class="mt-5 grid gap-3 md:grid-cols-3">
+        <a class="organiser-card {% if recommended_resource == 'flashcards' %}is-recommended{% endif %}" href="{% url 'core:revision_resource' session.id 'flashcards' %}">
+            <span>Flashcards</span>
+            <small>Quick recall, one idea at a time</small>
+        </a>
+        <a class="organiser-card {% if recommended_resource == 'mindmap' %}is-recommended{% endif %}" href="{% url 'core:revision_resource' session.id 'mindmap' %}">
+            <span>Mind map</span>
+            <small>Visual links, colours, AI image prompts</small>
+        </a>
+        <a class="organiser-card {% if recommended_resource == 'flowchart' %}is-recommended{% endif %}" href="{% url 'core:revision_resource' session.id 'flowchart' %}">
+            <span>Flow chart</span>
+            <small>Predictable step-by-step route</small>
+        </a>
+    </div>
+    <p class="helper-text mt-4">Peckish recommends {{ recommended_resource_label }} for your profile, but every organiser remains available.</p>
+</section>
+
+<section class="mt-8 grid gap-4 md:grid-cols-2" aria-label="Concept notes">
+    {% for concept in concepts %}
+        <article class="concept-card">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="eyebrow">Concept {{ forloop.counter }}</p>
+                    <h2 class="card-title mt-1">{{ concept.title }}</h2>
+                </div>
+                {% if concept.turns.all %}
+                    <span class="status-pill">Started</span>
+                {% endif %}
+            </div>
+            <p class="mt-4 whitespace-pre-line text-[color:var(--muted)]">{{ concept.source_notes }}</p>
+            <a class="secondary-button mt-5 inline-flex" href="{% url 'core:teach' session.id concept.id %}">Teach this</a>
+        </article>
+    {% empty %}
+        <p>No concepts were created yet.</p>
+    {% endfor %}
+</section>
+{% endblock %}
